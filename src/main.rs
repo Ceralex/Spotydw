@@ -1,11 +1,15 @@
-use std::{env, process};
+use std::env;
 use std::process::ExitCode;
 
 mod config;
-mod spotify;
-
-use crate::spotify::{AccessToken, parse_url, UrlType};
 use config::Config;
+
+mod spotify {
+    pub mod access_token;
+    pub mod api;
+}
+use spotify::access_token::AccessToken;
+use spotify::api::{UrlType, fetch_track};
 
 fn usage(program: &str) {
     eprintln!("Usage: {program} [SUBCOMMAND] [OPTIONS]");
@@ -58,11 +62,11 @@ fn entry() -> Result<(), ()> {
                 eprintln!("ERROR: failed to load access token: {err}");
             })?;
 
-            let (url_type, id) = parse_url(&url);
+            let (url_type, id) = spotify::api::parse_url(&url);
 
             match url_type {
                 UrlType::Track => {
-                    let t = spotify::fetch_track(access_token.get_token(), &id);
+                    let t = fetch_track(access_token.get_token(), &id);
 
                     println!("{:?}", t);
                 }
