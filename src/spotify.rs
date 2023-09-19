@@ -76,7 +76,10 @@ impl AccessToken {
 }
 
 fn fetch_token(config: &Config) -> Result<AccessToken, ureq::Error> {
-    let auth_header = format!("{}:{}", config.spotify_id, config.spotify_secret);
+    let spotify_id = config.get_spotify_id();
+    let spotify_secret = config.get_spotify_secret();
+
+    let auth_header = format!("{}:{}", spotify_id, spotify_secret);
     let encoded_auth_header = general_purpose::STANDARD_NO_PAD.encode(&auth_header);
 
     let auth_options = [("grant_type", "client_credentials")];

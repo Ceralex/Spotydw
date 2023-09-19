@@ -38,8 +38,7 @@ fn entry() -> Result<(), ()> {
                 eprintln!("ERROR: Spotify secret is not provided");
             })?;
 
-            config.spotify_id = id;
-            config.spotify_secret = secret;
+           config.set_config(id, secret);
 
             config.save().map_err(|err| {
                 eprintln!("ERROR: failed to save config: {err}");

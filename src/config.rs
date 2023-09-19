@@ -3,23 +3,24 @@ use std::fs::{self, File};
 use std::io::Write;
 use std::path::PathBuf;
 use std::process;
+use serde::{Deserialize, Serialize};
 
 const FOLDER_NAME: &str = "spotydw";
-const FILE_NAME: &str = "spotydw.conf";
+const FILE_NAME: &str = "config.json";
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Config {
-    pub spotify_id: String,
-    pub spotify_secret: String,
+    spotify_id: String,
+    spotify_secret: String,
 }
 impl Config {
     pub fn save(&self) -> Result<(), std::io::Error> {
         let path = config_path().unwrap();
 
-        let mut file = File::create(path.join(FILE_NAME))?;
+        let json_str = serde_json::to_string(&self)?;
 
-        writeln!(&mut file, "{}", &self.spotify_id)?;
-        writeln!(&mut file, "{}", &self.spotify_secret)?;
+        let mut file = File::create(path.join(FILE_NAME))?;
+        file.write_all(json_str.as_bytes())?;
 
         Ok(())
     }
@@ -29,18 +30,22 @@ impl Config {
 
         match fs::read_to_string(path.join(FILE_NAME)) {
             Ok(s) => {
-                let mut lines = s.lines();
+               let config: Config = serde_json::from_str(&s)?;
 
-                let id = lines.next().unwrap_or_default().to_string();
-                let secret = lines.next().unwrap_or_default().to_string();
-
-                Ok(Config {
-                    spotify_id: id,
-                    spotify_secret: secret,
-                })
+                Ok(config)
             }
             Err(_) => Ok(Config::default()),
         }
+    }
+    pub fn get_spotify_id(&self) -> &str {
+        &self.spotify_id
+    }
+    pub fn get_spotify_secret(&self) -> &str {
+        &self.spotify_secret
+    }
+    pub fn set_config(&mut self, spotify_id: String, spotify_secret: String) {
+        self.spotify_id = spotify_id;
+        self.spotify_secret = spotify_secret;
     }
 }
 
