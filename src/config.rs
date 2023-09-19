@@ -1,7 +1,9 @@
-use std::fs;
 use std::fs::File;
 use std::io::Write;
+use std::path::PathBuf;
+use std::{fs, process};
 
+const FOLDER_NAME: &str = "spotydw";
 const FILE_NAME: &str = "spotydw.conf";
 
 #[derive(Debug, Default)]
@@ -11,9 +13,10 @@ pub struct Config {
 }
 
 impl Config {
-    // TODO: change file location
     pub fn save(&self) -> Result<(), std::io::Error> {
-        let mut file = File::create(FILE_NAME)?;
+        let path = config_path().unwrap_or(std::env::current_dir().unwrap());
+
+        let mut file = File::create(path.join(FILE_NAME))?;
 
         writeln!(&mut file, "{}", &self.spotify_id)?;
         writeln!(&mut file, "{}", &self.spotify_secret)?;
@@ -27,7 +30,10 @@ impl Config {
     }
 
     pub fn load() -> Result<Self, std::io::Error> {
-        match fs::read_to_string(FILE_NAME) {
+        let path = config_path().unwrap_or(std::env::current_dir().unwrap());
+
+        dbg!(&path.join(FILE_NAME));
+        match fs::read_to_string(path.join(FILE_NAME)) {
             Ok(s) => {
                 let mut lines = s.lines();
 
@@ -42,4 +48,23 @@ impl Config {
             Err(_) => Ok(Config::default()),
         }
     }
+}
+
+fn config_path() -> Result<PathBuf, std::env::VarError> {
+    let os = std::env::consts::OS;
+
+    let config_dir = match os {
+        "linux" | "macos" => PathBuf::from(std::env::var("HOME")?).join(".config"),
+        "windows" => PathBuf::from(std::env::var("APPDATA")?),
+        _ => {
+            eprintln!("ERROR: unsupported OS: {}", os);
+            process::exit(1)
+        }
+    };
+
+    let config_path = config_dir.join(FOLDER_NAME);
+
+    std::fs::create_dir_all(&config_path).unwrap();
+
+    Ok(config_path)
 }
