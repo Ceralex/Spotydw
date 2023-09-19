@@ -24,7 +24,6 @@ impl Config {
 
         Ok(())
     }
-    // TODO: Change save format to json
     pub fn load() -> Result<Self, std::io::Error> {
         let path = config_path().unwrap();
 

@@ -1,10 +1,10 @@
-use std::env;
+use std::{env, process};
 use std::process::ExitCode;
 
 mod config;
 mod spotify;
 
-use crate::spotify::AccessToken;
+use crate::spotify::{AccessToken, parse_url, UrlType};
 use config::Config;
 
 fn usage(program: &str) {
@@ -49,11 +49,30 @@ fn entry() -> Result<(), ()> {
             Ok(())
         }
         "download" => {
-            println!("Downloading");
-            AccessToken::load(&config).map_err(|err| {
+            let url = args.next().ok_or_else(|| {
+                usage(&program);
+                eprintln!("ERROR: URL is not provided");
+            })?;
+
+            let access_token = AccessToken::load(&config).map_err(|err| {
                 eprintln!("ERROR: failed to load access token: {err}");
             })?;
 
+            let (url_type, id) = parse_url(&url);
+
+            match url_type {
+                UrlType::Track => {
+                    let t = spotify::fetch_track(access_token.get_token(), &id);
+
+                    println!("{:?}", t);
+                }
+                UrlType::Playlist => {
+                    unimplemented!("Playlist download")
+                }
+                UrlType::Album => {
+                    unimplemented!("Album download")
+                }
+            }
             Ok(())
         }
         _ => {
