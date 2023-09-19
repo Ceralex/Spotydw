@@ -2,6 +2,9 @@ use std::env;
 use std::process::ExitCode;
 
 mod config;
+mod spotify;
+
+use crate::spotify::AccessToken;
 use config::Config;
 
 fn usage(program: &str) {
@@ -26,8 +29,6 @@ fn entry() -> Result<(), ()> {
 
     match subcommand.as_str() {
         "config" => {
-            println!("Setting secret");
-
             let id = args.next().ok_or_else(|| {
                 usage(&program);
                 eprintln!("ERROR: Spotify client is not provided");
@@ -37,16 +38,22 @@ fn entry() -> Result<(), ()> {
                 eprintln!("ERROR: Spotify secret is not provided");
             })?;
 
-            config.set(id, secret);
+            config.spotify_id = id;
+            config.spotify_secret = secret;
+
             config.save().map_err(|err| {
                 eprintln!("ERROR: failed to save config: {err}");
             })?;
+
+            println!("Credentials saved");
 
             Ok(())
         }
         "download" => {
             println!("Downloading");
-            println!("Config: {:?}", config);
+            AccessToken::load(&config).map_err(|err| {
+                eprintln!("ERROR: failed to load access token: {err}");
+            })?;
 
             Ok(())
         }
