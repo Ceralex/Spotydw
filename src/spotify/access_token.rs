@@ -89,7 +89,10 @@ fn fetch_token(config: &Config) -> Result<AccessToken, ureq::Error> {
     let response = ureq::post("https://accounts.spotify.com/api/token")
         .set("Authorization", &format!("Basic {encoded_auth_header}"))
         .send_form(&auth_options)
-        .expect("Failed to make the request");
+        .unwrap_or_else(|err| {
+            eprintln!("ERROR: Failed to make the request: {err}, check your credentials");
+            std::process::exit(1);
+        });
 
     let body: AuthResponse = response.into_json().expect("Failed to parse JSON response");
 
