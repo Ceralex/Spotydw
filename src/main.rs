@@ -4,15 +4,14 @@ use std::process::ExitCode;
 mod config;
 use config::Config;
 
-mod resources;
-use crate::resources::check_dependencies;
-
 mod spotify {
     pub mod access_token;
     pub mod api;
 }
 use spotify::access_token::AccessToken;
 use spotify::api::{UrlType, fetch_track};
+
+use which::which;
 
 fn usage(program: &str) {
     eprintln!("Usage: {program} [SUBCOMMAND] [OPTIONS]");
@@ -65,8 +64,6 @@ fn entry() -> Result<(), ()> {
                 eprintln!("ERROR: failed to load access token: {err}");
             })?;
 
-            check_dependencies();
-
             let (url_type, id) = spotify::api::parse_url(&url);
 
             match url_type {
@@ -93,8 +90,31 @@ fn entry() -> Result<(), ()> {
 }
 
 fn main() -> ExitCode {
+    check_dependencies().err();
+
     match entry() {
         Ok(()) => ExitCode::SUCCESS,
         Err(()) => ExitCode::FAILURE,
     }
 }
+
+fn check_dependencies() -> Result<(), String> {
+    let mut err = String::new();
+
+    if which("yt-dlp").is_err() {
+        err.push_str("yt-dlp is not installed. ");
+    }
+
+    if which("ffmpeg").is_err() {
+        err.push_str("ffmpeg is not installed. ");
+    }
+
+    if !err.is_empty() {
+        eprintln!("ERROR: {}", err);
+        return Err(err);
+    }
+
+    Ok(())
+}
+
+

@@ -47,7 +47,7 @@ impl Config {
         self.spotify_secret = spotify_secret;
     }
     pub fn config_path() -> Option<PathBuf> {
-        let os = std::env::consts::OS;
+        let os = env::consts::OS;
 
         let home_var = match os {
             "linux" | "macos" => env::var("HOME").ok(),
