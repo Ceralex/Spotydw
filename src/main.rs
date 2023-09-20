@@ -4,6 +4,9 @@ use std::process::ExitCode;
 mod config;
 use config::Config;
 
+mod resources;
+use crate::resources::check_dependencies;
+
 mod spotify {
     pub mod access_token;
     pub mod api;
@@ -62,13 +65,15 @@ fn entry() -> Result<(), ()> {
                 eprintln!("ERROR: failed to load access token: {err}");
             })?;
 
+            check_dependencies();
+
             let (url_type, id) = spotify::api::parse_url(&url);
 
             match url_type {
                 UrlType::Track => {
-                    let t = fetch_track(access_token.get_token(), &id);
+                    let track = fetch_track(access_token.get_token(), &id);
 
-                    println!("{:?}", t);
+                    let _qry = format!("{} - {}", track.name, track.artists.iter().map(|artist| artist.name.clone()).collect::<Vec<String>>().join(", "));
                 }
                 UrlType::Playlist => {
                     unimplemented!("Playlist download")

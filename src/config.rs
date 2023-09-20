@@ -15,7 +15,7 @@ pub struct Config {
 }
 impl Config {
     pub fn save(&self) -> Result<(), std::io::Error> {
-        let path = config_path().unwrap();
+        let path = Config::config_path().unwrap();
 
         let json_str = serde_json::to_string(&self)?;
 
@@ -25,7 +25,7 @@ impl Config {
         Ok(())
     }
     pub fn load() -> Result<Self, std::io::Error> {
-        let path = config_path().unwrap();
+        let path = Config::config_path().unwrap();
 
         match fs::read_to_string(path.join(FILE_NAME)) {
             Ok(s) => {
@@ -46,39 +46,40 @@ impl Config {
         self.spotify_id = spotify_id;
         self.spotify_secret = spotify_secret;
     }
-}
+    pub fn config_path() -> Option<PathBuf> {
+        let os = std::env::consts::OS;
 
-pub fn config_path() -> Option<PathBuf> {
-    let os = std::env::consts::OS;
-
-    let home_var = match os {
-        "linux" | "macos" => env::var("HOME").ok(),
-        "windows" => env::var("APPDATA").ok(),
-        _ => {
-            eprintln!("ERROR: Unsupported OS: {}", os);
-            process::exit(1);
-        }
-    };
-
-    let config_dir = home_var
-        .map(|home| {
-            let mut path = PathBuf::from(home);
-
-            if os != "windows" {
-                path.push(".config");
+        let home_var = match os {
+            "linux" | "macos" => env::var("HOME").ok(),
+            "windows" => env::var("APPDATA").ok(),
+            _ => {
+                eprintln!("ERROR: Unsupported OS: {}", os);
+                process::exit(1);
             }
+        };
 
-            path.push(FOLDER_NAME);
-            path
-        }).unwrap_or_else(|| {
+        let config_dir = home_var
+            .map(|home| {
+                let mut path = PathBuf::from(home);
+
+                if os != "windows" {
+                    path.push(".config");
+                }
+
+                path.push(FOLDER_NAME);
+                path
+            }).unwrap_or_else(|| {
             eprintln!("ERROR: Failed to get home directory");
             process::exit(1);
         });
 
-    fs::create_dir_all(&config_dir).unwrap_or_else(|err| {
-        eprintln!("ERROR: Failed to create config directory: {err}");
-        process::exit(1);
-    });
+        fs::create_dir_all(&config_dir).unwrap_or_else(|err| {
+            eprintln!("ERROR: Failed to create config directory: {err}");
+            process::exit(1);
+        });
 
-    Some(config_dir)
+        Some(config_dir)
+    }
 }
+
+

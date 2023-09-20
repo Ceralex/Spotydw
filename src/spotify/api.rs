@@ -9,24 +9,24 @@ pub enum UrlType {
 }
 #[derive(Debug, Deserialize)]
 pub struct Track {
-    name: String,
-    artists: Vec<Artist>,
-    album: Album,
+    pub name: String,
+    pub artists: Vec<Artist>,
+    pub album: Album,
 }
 #[derive(Debug, Deserialize)]
-struct Artist {
-    name: String,
+pub struct Artist {
+    pub name: String,
 }
 #[derive(Debug, Deserialize)]
-struct Album {
-    name: String,
-    release_date: String,
-    artists: Vec<Artist>,
-    images: Vec<Image>,
+pub struct Album {
+    pub name: String,
+    pub release_date: String,
+    pub artists: Vec<Artist>,
+    pub images: Vec<Image>,
 }
 #[derive(Debug, Deserialize)]
-struct Image {
-    url: String,
+pub struct Image {
+    pub url: String,
     width: usize,
     height: usize,
 }
@@ -45,18 +45,20 @@ pub fn parse_url(url: &str) -> (UrlType, String) {
     let mut parts = path.split('/');
 
     let _ = parts.next();
-    let url_type = parts.next().expect("Failed to get URL type");
+    let type_string = parts.next().expect("Failed to get URL type");
     let id = parts.next().expect("Failed to get ID");
 
-    match url_type {
-        "track" => (UrlType::Track, String::from(id)),
-        "playlist" => (UrlType::Playlist, String::from(id)),
-        "album" => (UrlType::Album, String::from(id)),
+    let url_type = match type_string {
+        "track" => UrlType::Track,
+        "playlist" => UrlType::Playlist,
+        "album" => UrlType::Album,
         _ => {
             eprintln!("ERROR: Invalid URL type, only track, playlist and album are supported");
             std::process::exit(1);
         },
-    }
+    };
+
+    (url_type, id.to_string())
 }
 pub fn fetch_track(token: &str, id: &str) -> Track {
     let url = format!("https://api.spotify.com/v1/tracks/{}", id);

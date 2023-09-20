@@ -4,7 +4,7 @@ use std::io::Write;
 use std::time::{Duration, SystemTime};
 use base64::{engine::general_purpose, Engine as _};
 use serde::{Deserialize, Serialize};
-use crate::config::{Config, config_path};
+use crate::config::Config;
 
 const FILE_NAME: &str = "spotify_token.json";
 
@@ -22,7 +22,7 @@ pub struct AccessToken {
 
 impl AccessToken {
     pub fn save(&self) -> Result<(), std::io::Error> {
-        let path = config_path().unwrap();
+        let path = Config::config_path().unwrap();
 
         let json_str = serde_json::to_string(&self)?;
 
@@ -32,7 +32,7 @@ impl AccessToken {
     }
 
     pub fn load(config: &Config) -> Result<Self, std::io::Error> {
-        let path = config_path().unwrap();
+        let path = Config::config_path().unwrap();
 
         match fs::read_to_string(path.join(FILE_NAME)) {
             Ok(s) => {
