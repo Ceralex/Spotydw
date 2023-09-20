@@ -80,6 +80,12 @@ impl Config {
 
         Some(config_dir)
     }
+    pub fn get_yt_dlp_path() -> PathBuf {
+        which::which("yt-dlp").expect("yt-dlp not found in PATH")
+    }
+    pub fn get_ffmpeg_path() -> PathBuf {
+        which::which("ffmpeg").expect("ffmpeg not found in PATH")
+    }
 }
 
 

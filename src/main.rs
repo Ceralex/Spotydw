@@ -11,6 +11,8 @@ mod spotify {
 use spotify::access_token::AccessToken;
 use spotify::api::{UrlType, fetch_track};
 
+mod youtube;
+
 use which::which;
 
 fn usage(program: &str) {
@@ -66,11 +68,18 @@ fn entry() -> Result<(), ()> {
 
             let (url_type, id) = spotify::api::parse_url(&url);
 
+            let yt_dlp_path = Config::get_yt_dlp_path();
+            let ffmpeg_path = Config::get_ffmpeg_path();
+
             match url_type {
                 UrlType::Track => {
                     let track = fetch_track(access_token.get_token(), &id);
 
-                    let _qry = format!("{} - {}", track.name, track.artists.iter().map(|artist| artist.name.clone()).collect::<Vec<String>>().join(", "));
+                    let qry = format!("{} - {}", track.name, track.artists.iter().map(|artist| artist.name.clone()).collect::<Vec<String>>().join(", "));
+
+                    let videos = youtube::search(&yt_dlp_path, &qry);
+
+                    println!("{:?}", videos);
                 }
                 UrlType::Playlist => {
                     unimplemented!("Playlist download")
