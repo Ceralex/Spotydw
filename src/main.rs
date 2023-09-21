@@ -77,7 +77,7 @@ fn entry() -> Result<(), ()> {
 
                     let qry = format!("{} - {}", track.name, track.artists.iter().map(|artist| artist.name.clone()).collect::<Vec<String>>().join(", "));
 
-                    let videos = youtube::search(&yt_dlp_path, &qry);
+                    let videos = youtube::search(&qry);
 
                     println!("{:?}", videos);
                 }
