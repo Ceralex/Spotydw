@@ -27,8 +27,6 @@ pub struct Album {
 #[derive(Debug, Deserialize)]
 pub struct Image {
     pub url: String,
-    width: usize,
-    height: usize,
 }
 pub fn parse_url(url: &str) -> (UrlType, String) {
     let parsed = Url::parse(url).unwrap_or_else(|err| {
