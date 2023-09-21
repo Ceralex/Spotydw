@@ -106,11 +106,11 @@ pub fn download(
     // If output_path is a provided, use it
     let command = if output_path.is_some() {
         command.arg("-o").arg(&format!(
-            "{}/%(title)s.%(ext)s",
+            "{}/%(id)s.%(ext)s",
             output_path.unwrap().to_str().unwrap()
         ))
     } else {
-        &mut command
+        command.arg("-o").arg("%(id)s.%(ext)s")
     };
 
     let output = command.output()?;
@@ -127,6 +127,11 @@ pub fn download(
         ));
     }
 
-    let output_file = format!("{}.opus", video.title);
+    let output_file = if let Some(output_path) = output_path {
+        format!("{}/{}.opus", output_path.to_str().unwrap(), video.id)
+    } else {
+        format!("{}.opus", video.id)
+    };
+
     Ok(output_file)
 }
