@@ -1,5 +1,7 @@
-use std::time::Duration;
 use serde_json::Value;
+use std::path::Path;
+use std::process::Command;
+use std::time::Duration;
 
 const DEFAULT_INNERTUBE_KEY: &str = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8";
 #[derive(Debug)]
@@ -9,8 +11,8 @@ pub struct VideoInfo {
     pub duration: Duration,
 }
 pub fn search(query: &str) -> Vec<VideoInfo> {
-
-    let body = format!(r#"
+    let body = format!(
+        r#"
 {{
   "query": "{query}",
   "params": "EAgIQAQ%253D%253D",
@@ -21,9 +23,13 @@ pub fn search(query: &str) -> Vec<VideoInfo> {
     }}
   }}
 }}
-"#);
+"#
+    );
 
-    let url = format!("https://youtube.com/youtubei/v1/search?key={}", DEFAULT_INNERTUBE_KEY);
+    let url = format!(
+        "https://youtube.com/youtubei/v1/search?key={}",
+        DEFAULT_INNERTUBE_KEY
+    );
     let response = ureq::post(&url)
         .set("Content-Type", "application/json")
         .set("Host", "www.youtube.com")
@@ -35,7 +41,8 @@ pub fn search(query: &str) -> Vec<VideoInfo> {
 
     let mut videos = Vec::new();
 
-    let results = data["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"]
+    let results = data["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"]
+        ["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"]
         .as_array()
         .unwrap();
 
@@ -79,4 +86,47 @@ fn parse_duration_string(duration_str: &str) -> Duration {
     } else {
         Duration::default()
     }
+}
+
+pub fn download(
+    yt_dlp_path: &Path,
+    video: &VideoInfo,
+    output_path: Option<&Path>,
+) -> Result<String, std::io::Error> {
+    let url = format!("https://www.youtube.com/watch?v={}", video.id);
+
+    let mut command = Command::new(&yt_dlp_path);
+
+    command
+        .arg("-x")
+        .arg(&url)
+        .arg("--audio-format")
+        .arg("best");
+
+    // If output_path is a provided, use it
+    let command = if output_path.is_some() {
+        command.arg("-o").arg(&format!(
+            "{}/%(title)s.%(ext)s",
+            output_path.unwrap().to_str().unwrap()
+        ))
+    } else {
+        &mut command
+    };
+
+    let output = command.output()?;
+
+    if !output.status.success() {
+        eprintln!(
+            "ERROR: yt-dlp failed with exit code {}",
+            output.status.code().unwrap_or(1)
+        );
+        eprintln!("yt-dlp output: {}", String::from_utf8_lossy(&output.stderr));
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "yt-dlp failed",
+        ));
+    }
+
+    let output_file = format!("{}.opus", video.title);
+    Ok(output_file)
 }

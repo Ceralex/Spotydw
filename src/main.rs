@@ -9,7 +9,7 @@ mod spotify {
     pub mod api;
 }
 use spotify::access_token::AccessToken;
-use spotify::api::{UrlType, fetch_track};
+use spotify::api::{fetch_track, UrlType};
 
 mod youtube;
 
@@ -46,7 +46,7 @@ fn entry() -> Result<(), ()> {
                 eprintln!("ERROR: Spotify secret is not provided");
             })?;
 
-           config.set_config(id, secret);
+            config.set_config(id, secret);
 
             config.save().map_err(|err| {
                 eprintln!("ERROR: failed to save config: {err}");
@@ -75,11 +75,27 @@ fn entry() -> Result<(), ()> {
                 UrlType::Track => {
                     let track = fetch_track(access_token.get_token(), &id);
 
-                    let qry = format!("{} - {}", track.name, track.artists.iter().map(|artist| artist.name.clone()).collect::<Vec<String>>().join(", "));
+                    let qry = format!(
+                        "{} - {}",
+                        track.name,
+                        track
+                            .artists
+                            .iter()
+                            .map(|artist| artist.name.clone())
+                            .collect::<Vec<String>>()
+                            .join(", ")
+                    );
 
                     let videos = youtube::search(&qry);
 
-                    println!("{:?}", videos);
+                    let video = videos.first().expect("No videos found");
+
+                    let input_file =
+                        youtube::download(&yt_dlp_path, &video, None).map_err(|err| {
+                            eprintln!("ERROR: failed to download video: {err}");
+                        })?;
+
+                    println!("Downloaded {}", input_file);
                 }
                 UrlType::Playlist => {
                     unimplemented!("Playlist download")
@@ -125,5 +141,3 @@ fn check_dependencies() -> Result<(), String> {
 
     Ok(())
 }
-
-

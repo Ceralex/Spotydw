@@ -1,9 +1,9 @@
+use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::PathBuf;
 use std::process;
-use serde::{Deserialize, Serialize};
 
 const FOLDER_NAME: &str = "spotydw";
 const FILE_NAME: &str = "config.json";
@@ -29,7 +29,7 @@ impl Config {
 
         match fs::read_to_string(path.join(FILE_NAME)) {
             Ok(s) => {
-               let config: Config = serde_json::from_str(&s)?;
+                let config: Config = serde_json::from_str(&s)?;
 
                 Ok(config)
             }
@@ -68,10 +68,11 @@ impl Config {
 
                 path.push(FOLDER_NAME);
                 path
-            }).unwrap_or_else(|| {
-            eprintln!("ERROR: Failed to get home directory");
-            process::exit(1);
-        });
+            })
+            .unwrap_or_else(|| {
+                eprintln!("ERROR: Failed to get home directory");
+                process::exit(1);
+            });
 
         fs::create_dir_all(&config_dir).unwrap_or_else(|err| {
             eprintln!("ERROR: Failed to create config directory: {err}");
@@ -87,5 +88,3 @@ impl Config {
         which::which("ffmpeg").expect("ffmpeg not found in PATH")
     }
 }
-
-

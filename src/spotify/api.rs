@@ -55,7 +55,7 @@ pub fn parse_url(url: &str) -> (UrlType, String) {
         _ => {
             eprintln!("ERROR: Invalid URL type, only track, playlist and album are supported");
             std::process::exit(1);
-        },
+        }
     };
 
     (url_type, id.to_string())
@@ -63,7 +63,8 @@ pub fn parse_url(url: &str) -> (UrlType, String) {
 pub fn fetch_track(token: &str, id: &str) -> Track {
     let url = format!("https://api.spotify.com/v1/tracks/{}", id);
 
-    let response = ureq::get(&url).set("Authorization", &format!("Bearer {}", token))
+    let response = ureq::get(&url)
+        .set("Authorization", &format!("Bearer {}", token))
         .call()
         .unwrap_or_else(|err| {
             eprintln!("ERROR: Failed to make the request: {err}, check the URL");
