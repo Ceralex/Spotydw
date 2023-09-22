@@ -1,4 +1,5 @@
 use std::env;
+use std::path::Path;
 use std::process::ExitCode;
 use which::which;
 
@@ -11,6 +12,7 @@ mod spotify {
 }
 use spotify::access_token::AccessToken;
 use spotify::api::{fetch_track, UrlType};
+use crate::spotify::api::fetch_playlist;
 
 mod youtube;
 
@@ -76,6 +78,8 @@ fn entry() -> Result<(), ()> {
                 UrlType::Track => {
                     let track = fetch_track(access_token.get_token(), &id);
 
+                    println!("Downloading track: {}", track.name);
+
                     let qry = format!(
                         "{} - {}",
                         track.name,
@@ -89,7 +93,12 @@ fn entry() -> Result<(), ()> {
 
                     let videos = youtube::search(&qry);
 
-                    let video = videos.first().expect("No videos found");
+                    // Take the video in the first 5 results with the most similar duration as the track
+                    let video = videos
+                        .iter()
+                        .take(5)
+                        .min_by_key(|&video| video.duration_ms.wrapping_sub(track.duration_ms))
+                        .unwrap();
 
                     let input_file =
                         youtube::download(&yt_dlp_path, &video, None).map_err(|err| {
@@ -99,7 +108,39 @@ fn entry() -> Result<(), ()> {
                     ffmpeg::metadata_and_to_mp3(&ffmpeg_path, &input_file, &track);
                 }
                 UrlType::Playlist => {
-                    unimplemented!("Playlist download")
+                    let playlist = fetch_playlist(access_token.get_token(), &id);
+
+                    println!("Downloading playlist: {}", playlist.name);
+
+                    for track in playlist.tracks.items {
+                        let qry = format!(
+                            "{} - {}",
+                            track.track.name,
+                            track
+                                .track
+                                .artists
+                                .iter()
+                                .map(|artist| artist.name.clone())
+                                .collect::<Vec<String>>()
+                                .join(", ")
+                        );
+
+                        let videos = youtube::search(&qry);
+
+                        // Take the video in the first 5 results with the most similar duration as the track
+                        let video = videos
+                            .iter()
+                            .take(5)
+                            .min_by_key(|&video| video.duration_ms.wrapping_sub(track.track.duration_ms))
+                            .unwrap();
+
+                        let input_file =
+                            youtube::download(&yt_dlp_path, &video, Some(Path::new(&playlist.name))).map_err(|err| {
+                                eprintln!("ERROR: failed to download video: {err}");
+                            })?;
+
+                        ffmpeg::metadata_and_to_mp3(&ffmpeg_path, &input_file, &track.track);
+                    }
                 }
                 UrlType::Album => {
                     unimplemented!("Album download")
