@@ -7,25 +7,25 @@ pub enum UrlType {
     Playlist,
     Album,
 }
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Track {
     pub name: String,
     pub artists: Vec<Artist>,
     pub album: Album,
     pub duration_ms: u64,
 }
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Artist {
     pub name: String,
 }
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Album {
     pub name: String,
     pub release_date: String,
     pub artists: Vec<Artist>,
     pub images: Vec<Image>,
 }
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Image {
     pub url: String,
 }
@@ -86,7 +86,7 @@ pub struct Items {
     pub items: Vec<PlaylistTrack>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct PlaylistTrack {
     pub track: Track,
 }

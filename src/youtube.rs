@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 const DEFAULT_INNERTUBE_KEY: &str = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8";
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct VideoInfo {
     pub id: String,
     pub title: String,

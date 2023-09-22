@@ -2,6 +2,7 @@ use std::env;
 use std::path::Path;
 use std::process::ExitCode;
 use which::which;
+use rayon::prelude::*;
 
 mod config;
 use config::Config;
@@ -112,12 +113,13 @@ fn entry() -> Result<(), ()> {
 
                     println!("Downloading playlist: {}", playlist.name);
 
-                    for track in playlist.tracks.items {
+                    playlist.tracks.items.par_iter().for_each(|playlist_track| {
+                        let track = &playlist_track.track;
+
                         let qry = format!(
                             "{} - {}",
-                            track.track.name,
+                            track.name,
                             track
-                                .track
                                 .artists
                                 .iter()
                                 .map(|artist| artist.name.clone())
@@ -131,16 +133,16 @@ fn entry() -> Result<(), ()> {
                         let video = videos
                             .iter()
                             .take(5)
-                            .min_by_key(|&video| video.duration_ms.wrapping_sub(track.track.duration_ms))
+                            .min_by_key(|&video| video.duration_ms.wrapping_sub(track.duration_ms))
                             .unwrap();
 
                         let input_file =
                             youtube::download(&yt_dlp_path, &video, Some(Path::new(&playlist.name))).map_err(|err| {
                                 eprintln!("ERROR: failed to download video: {err}");
-                            })?;
+                            }).unwrap();
 
-                        ffmpeg::metadata_and_to_mp3(&ffmpeg_path, &input_file, &track.track);
-                    }
+                        ffmpeg::metadata_and_to_mp3(&ffmpeg_path, &input_file, &track);
+                    });
                 }
                 UrlType::Album => {
                     unimplemented!("Album download")

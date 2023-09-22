@@ -24,7 +24,7 @@ pub fn metadata_and_to_mp3(ffmpeg_path: &PathBuf, input_file: &PathBuf, t: &Trac
     if let Some(parent) = input_file.parent() {
         output_file_path.push(parent);
     }
-    output_file_path.push(format!("{}.mp3", t.name));
+    output_file_path.push(format!("{}.mp3", t.name.replace("/", "-")));
 
     command.args(&[
         "-i",
@@ -75,4 +75,6 @@ pub fn metadata_and_to_mp3(ffmpeg_path: &PathBuf, input_file: &PathBuf, t: &Trac
     }
 
     fs::remove_file(&input_file).expect("Failed to remove input file");
+
+    println!("{} downloaded", t.name);
 }
