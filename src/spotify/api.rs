@@ -94,7 +94,6 @@ pub fn fetch_playlist(token: &str, id: &str) -> Playlist {
     // field=name,tracks.items.track(name,artists.name,duration_ms,album(name,release_date,artists,images))
     let url = format!("https://api.spotify.com/v1/playlists/{id}?fields=name%2Ctracks.items.track%28name%2Cartists.name%2Cduration_ms%2Calbum%28name%2Crelease_date%2Cartists%2Cimages%29%29");
 
-
     let response = ureq::get(&url)
         .set("Authorization", &format!("Bearer {}", token))
         .call()
@@ -104,6 +103,40 @@ pub fn fetch_playlist(token: &str, id: &str) -> Playlist {
         });
 
     let body: Playlist = response.into_json().expect("Failed to parse JSON response");
+
+    body
+}
+
+#[derive(Debug, Deserialize)]
+pub struct AlbumResponse {
+    pub name: String,
+    pub release_date: String,
+    pub artists: Vec<Artist>,
+    pub images: Vec<Image>,
+    pub tracks: AlbumItems,
+}
+#[derive(Debug, Deserialize)]
+pub struct AlbumItems {
+    pub items: Vec<AlbumTrack>,
+}
+#[derive(Debug, Deserialize)]
+pub struct AlbumTrack {
+    pub name: String,
+    pub artists: Vec<Artist>,
+    pub duration_ms: u64,
+}
+pub fn fetch_album(token: &str, id: &str) -> AlbumResponse {
+    let url = format!("https://api.spotify.com/v1/albums/{id}");
+
+    let response = ureq::get(&url)
+        .set("Authorization", &format!("Bearer {}", token))
+        .call()
+        .unwrap_or_else(|err| {
+            eprintln!("ERROR: Failed to make the request: {err}, check the URL");
+            std::process::exit(1);
+        });
+
+    let body: AlbumResponse = response.into_json().expect("Failed to parse JSON response");
 
     body
 }

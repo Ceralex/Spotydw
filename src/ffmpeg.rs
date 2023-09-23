@@ -1,20 +1,27 @@
-use crate::spotify::api::Track;
+use crate::spotify::api::Artist;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-pub fn metadata_and_to_mp3(ffmpeg_path: &PathBuf, input_file: &PathBuf, t: &Track) {
+pub struct Metadata {
+    pub title: String,
+    pub artists: Vec<Artist>,
+    pub album_artists: Vec<Artist>,
+    pub album_name: String,
+    pub release_date: String,
+    pub album_cover_url: String,
+}
+pub fn metadata_and_to_mp3(ffmpeg_path: &PathBuf, input_file: &PathBuf, metadata: &Metadata) {
     let mut command = Command::new(&ffmpeg_path);
 
-    let artists = t
+    let artists = metadata
         .artists
         .iter()
         .map(|artist| artist.name.clone())
         .collect::<Vec<String>>()
         .join("; ");
-    let album_artists = t
-        .album
-        .artists
+    let album_artists = metadata
+        .album_artists
         .iter()
         .map(|artist| artist.name.clone())
         .collect::<Vec<String>>()
@@ -24,23 +31,23 @@ pub fn metadata_and_to_mp3(ffmpeg_path: &PathBuf, input_file: &PathBuf, t: &Trac
     if let Some(parent) = input_file.parent() {
         output_file_path.push(parent);
     }
-    output_file_path.push(format!("{}.mp3", t.name.replace("/", "-")));
+    output_file_path.push(format!("{}.mp3", metadata.title.replace("/", "-")));
 
     command.args(&[
         "-i",
         &input_file.to_str().unwrap(),
         "-i",
-        &t.album.images[0].url,
+        &metadata.album_cover_url,
         "-metadata",
-        &format!("title={}", t.name),
+        &format!("title={}", metadata.title),
         "-metadata",
         &format!("artist={}", artists),
         "-metadata",
         &format!("album_artist={}", album_artists),
         "-metadata",
-        &format!("album={}", t.album.name),
+        &format!("album={}", metadata.album_name),
         "-metadata",
-        &format!("date={}", t.album.release_date),
+        &format!("date={}", metadata.release_date),
         "-map",
         "0",
         "-map",
@@ -76,5 +83,5 @@ pub fn metadata_and_to_mp3(ffmpeg_path: &PathBuf, input_file: &PathBuf, t: &Trac
 
     fs::remove_file(&input_file).expect("Failed to remove input file");
 
-    println!("{} downloaded", t.name);
+    println!("{} downloaded", metadata.title);
 }

@@ -1,8 +1,8 @@
+use rayon::prelude::*;
 use std::env;
 use std::path::Path;
 use std::process::ExitCode;
 use which::which;
-use rayon::prelude::*;
 
 mod config;
 use config::Config;
@@ -11,9 +11,9 @@ mod spotify {
     pub mod access_token;
     pub mod api;
 }
+use crate::ffmpeg::Metadata;
 use spotify::access_token::AccessToken;
-use spotify::api::{fetch_track, UrlType};
-use crate::spotify::api::fetch_playlist;
+use spotify::api::{fetch_album, fetch_playlist, fetch_track, UrlType};
 
 mod youtube;
 
@@ -106,7 +106,15 @@ fn entry() -> Result<(), ()> {
                             eprintln!("ERROR: failed to download video: {err}");
                         })?;
 
-                    ffmpeg::metadata_and_to_mp3(&ffmpeg_path, &input_file, &track);
+                    let metadata = Metadata {
+                        title: track.name,
+                        artists: track.artists,
+                        album_artists: track.album.artists,
+                        album_name: track.album.name,
+                        release_date: track.album.release_date,
+                        album_cover_url: track.album.images[0].url.clone(),
+                    };
+                    ffmpeg::metadata_and_to_mp3(&ffmpeg_path, &input_file, &metadata);
                 }
                 UrlType::Playlist => {
                     let playlist = fetch_playlist(access_token.get_token(), &id);
@@ -136,16 +144,71 @@ fn entry() -> Result<(), ()> {
                             .min_by_key(|&video| video.duration_ms.wrapping_sub(track.duration_ms))
                             .unwrap();
 
-                        let input_file =
-                            youtube::download(&yt_dlp_path, &video, Some(Path::new(&playlist.name))).map_err(|err| {
-                                eprintln!("ERROR: failed to download video: {err}");
-                            }).unwrap();
+                        let input_file = youtube::download(
+                            &yt_dlp_path,
+                            &video,
+                            Some(Path::new(&playlist.name)),
+                        )
+                        .map_err(|err| {
+                            eprintln!("ERROR: failed to download video: {err}");
+                        })
+                        .unwrap();
 
-                        ffmpeg::metadata_and_to_mp3(&ffmpeg_path, &input_file, &track);
+                        let metadata = Metadata {
+                            title: track.name.clone(),
+                            artists: track.artists.clone(),
+                            album_artists: track.album.artists.clone(),
+                            album_name: track.album.name.clone(),
+                            release_date: track.album.release_date.clone(),
+                            album_cover_url: track.album.images[0].url.clone(),
+                        };
+
+                        ffmpeg::metadata_and_to_mp3(&ffmpeg_path, &input_file, &metadata);
                     });
                 }
                 UrlType::Album => {
-                    unimplemented!("Album download")
+                    let album = fetch_album(access_token.get_token(), &id);
+
+                    println!("Downloading album: {}", album.name);
+
+                    album.tracks.items.par_iter().for_each(|track| {
+                        let qry = format!(
+                            "{} - {}",
+                            track.name,
+                            track
+                                .artists
+                                .iter()
+                                .map(|artist| artist.name.clone())
+                                .collect::<Vec<String>>()
+                                .join(", ")
+                        );
+
+                        let videos = youtube::search(&qry);
+
+                        // Take the video in the first 5 results with the most similar duration as the track
+                        let video = videos
+                            .iter()
+                            .take(5)
+                            .min_by_key(|&video| video.duration_ms.wrapping_sub(track.duration_ms))
+                            .unwrap();
+
+                        let input_file =
+                            youtube::download(&yt_dlp_path, &video, Some(Path::new(&album.name)))
+                                .map_err(|err| {
+                                    eprintln!("ERROR: failed to download video: {err}");
+                                })
+                                .unwrap();
+
+                        let metadata = Metadata {
+                            title: track.name.clone(),
+                            artists: track.artists.clone(),
+                            album_artists: album.artists.clone(),
+                            album_name: album.name.clone(),
+                            release_date: album.release_date.clone(),
+                            album_cover_url: album.images[0].url.clone(),
+                        };
+                        ffmpeg::metadata_and_to_mp3(&ffmpeg_path, &input_file, &metadata);
+                    });
                 }
             }
             Ok(())
