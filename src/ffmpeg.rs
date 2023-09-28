@@ -31,7 +31,8 @@ pub fn metadata_and_to_mp3(ffmpeg_path: &PathBuf, input_file: &PathBuf, metadata
     if let Some(parent) = input_file.parent() {
         output_file_path.push(parent);
     }
-    output_file_path.push(format!("{}.mp3", metadata.title.replace("/", "-")));
+
+    output_file_path.push(format!("{}.mp3", metadata.title.replace(&['<', '>', ':', '"', '/', '\\', '|', '?', '*'], " ")));
 
     command.args(&[
         "-i",

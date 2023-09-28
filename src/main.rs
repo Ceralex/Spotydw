@@ -114,6 +114,7 @@ fn entry() -> Result<(), ()> {
                         release_date: track.album.release_date,
                         album_cover_url: track.album.images[0].url.clone(),
                     };
+
                     ffmpeg::metadata_and_to_mp3(&ffmpeg_path, &input_file, &metadata);
                 }
                 UrlType::Playlist => {
@@ -207,6 +208,7 @@ fn entry() -> Result<(), ()> {
                             release_date: album.release_date.clone(),
                             album_cover_url: album.images[0].url.clone(),
                         };
+
                         ffmpeg::metadata_and_to_mp3(&ffmpeg_path, &input_file, &metadata);
                     });
                 }
