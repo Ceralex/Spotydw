@@ -8,6 +8,8 @@ pub struct Metadata {
     pub artists: Vec<Artist>,
     pub album_artists: Vec<Artist>,
     pub album_name: String,
+    pub total_tracks: u64,
+    pub track_number: u64,
     pub release_date: String,
     pub album_cover_url: String,
 }
@@ -52,6 +54,8 @@ pub fn metadata_and_to_mp3(ffmpeg_path: &PathBuf, input_file: &PathBuf, metadata
         &format!("album_artist={}", album_artists),
         "-metadata",
         &format!("album={}", metadata.album_name),
+        "-metadata",
+        &format!("track={}/{}", metadata.track_number, metadata.total_tracks),
         "-metadata",
         &format!("date={}", metadata.release_date),
         "-map",

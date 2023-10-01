@@ -5,6 +5,7 @@ pub struct Track {
     pub name: String,
     pub artists: Vec<Artist>,
     pub album: Album,
+    pub track_number: u64,
     pub duration_ms: u64,
 }
 #[derive(Debug, Deserialize, Clone)]
@@ -15,6 +16,7 @@ pub struct Artist {
 pub struct Album {
     pub name: String,
     pub release_date: String,
+    pub total_tracks: u64,
     pub artists: Vec<Artist>,
     pub images: Vec<Image>,
 }
@@ -55,8 +57,8 @@ pub struct PlaylistTrack {
     pub track: Track,
 }
 pub fn fetch_playlist(token: &str, id: &str) -> Playlist {
-    // field=name,tracks.items.track(name,artists.name,duration_ms,album(name,release_date,artists,images))
-    let url = format!("https://api.spotify.com/v1/playlists/{id}?fields=name%2Ctracks.items.track%28name%2Cartists.name%2Cduration_ms%2Calbum%28name%2Crelease_date%2Cartists%2Cimages%29%29");
+    // name,tracks.items.track(name,artists.name,duration_ms,track_number,album(name,release_date,artists,images,total_tracks))
+    let url = format!("https://api.spotify.com/v1/playlists/{id}?fields=name%2Ctracks.items.track%28name%2Cartists.name%2Cduration_ms%2Ctrack_number%2Calbum%28name%2Crelease_date%2Cartists%2Cimages%2Ctotal_tracks%29%29");
 
     let response = ureq::get(&url)
         .set("Authorization", &format!("Bearer {}", token))
@@ -82,11 +84,13 @@ pub struct AlbumResponse {
 #[derive(Debug, Deserialize)]
 pub struct AlbumItems {
     pub items: Vec<AlbumTrack>,
+    pub total: u64,
 }
 #[derive(Debug, Deserialize)]
 pub struct AlbumTrack {
     pub name: String,
     pub artists: Vec<Artist>,
+    pub track_number: u64,
     pub duration_ms: u64,
 }
 pub fn fetch_album(token: &str, id: &str) -> AlbumResponse {

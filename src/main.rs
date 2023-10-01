@@ -118,6 +118,8 @@ fn entry() -> Result<(), ()> {
                                 artists: track.artists,
                                 album_artists: track.album.artists,
                                 album_name: track.album.name,
+                                total_tracks: track.album.total_tracks,
+                                track_number: track.track_number,
                                 release_date: track.album.release_date,
                                 album_cover_url: track.album.images[0].url.clone(),
                             };
@@ -167,6 +169,8 @@ fn entry() -> Result<(), ()> {
                                     artists: track.artists.clone(),
                                     album_artists: album.artists.clone(),
                                     album_name: album.name.clone(),
+                                    total_tracks: album.tracks.total,
+                                    track_number: track.track_number,
                                     release_date: album.release_date.clone(),
                                     album_cover_url: album.images[0].url.clone(),
                                 };
@@ -219,6 +223,8 @@ fn entry() -> Result<(), ()> {
                                     artists: track.artists.clone(),
                                     album_artists: track.album.artists.clone(),
                                     album_name: track.album.name.clone(),
+                                    total_tracks: track.album.total_tracks,
+                                    track_number: track.track_number,
                                     release_date: track.album.release_date.clone(),
                                     album_cover_url: track.album.images[0].url.clone(),
                                 };
