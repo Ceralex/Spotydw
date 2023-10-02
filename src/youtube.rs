@@ -97,7 +97,7 @@ pub fn download(
         .arg("-x")
         .arg(&url)
         .arg("--audio-format")
-        .arg("best");
+        .arg("opus");
 
     // If output_path is a provided, use it
     let command = if output_path.is_some() {
