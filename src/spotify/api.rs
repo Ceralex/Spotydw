@@ -70,14 +70,16 @@ pub fn fetch_playlist(token: &str, id: &str) -> Playlist {
         .unwrap_or_else(|err| {
             eprintln!("ERROR: Failed to make the request: {err}, check the URL");
             std::process::exit(1);
-        }).into_json::<PlaylistNameResponse>().expect("Failed to get playlist name");
+        })
+        .into_json::<PlaylistNameResponse>()
+        .expect("Failed to get playlist name");
 
     let mut playlist = Playlist {
         name: name_response.name,
         tracks: Items {
             items: Vec::new(),
             next: Some(String::new()),
-        }
+        },
     };
 
     let mut offset = 0;
@@ -103,7 +105,7 @@ pub fn fetch_playlist(token: &str, id: &str) -> Playlist {
         offset += 100;
 
         if body.next.unwrap_or("".to_string()).is_empty() {
-            break
+            break;
         }
     }
 

@@ -1,10 +1,12 @@
-use crate::config::Config;
 use base64::{engine::general_purpose, Engine as _};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::time::{Duration, SystemTime};
+
+use crate::config;
+use config::Config;
 
 const FILE_NAME: &str = "spotify_token.json";
 
