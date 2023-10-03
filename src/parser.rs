@@ -58,8 +58,7 @@ pub fn parse_url(url: &str) -> (UrlType, String) {
             _ => UrlType::SoundCloud(SoundCloudType::Track), // Assuming anything other than "sets" is a track
         };
 
-        let name = parts.next().expect("Found track or set name");
-        return (url_type, name.to_string());
+        return (url_type, url.to_string());
     } else {
         eprintln!("ERROR: Invalid host, only open.spotify.com and soundcloud.com are supported");
         std::process::exit(1);

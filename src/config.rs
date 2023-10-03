@@ -12,6 +12,7 @@ const FILE_NAME: &str = "config.json";
 pub struct Config {
     spotify_id: String,
     spotify_secret: String,
+    soundcloud_oauth_token: String,
 }
 impl Config {
     pub fn save(&self) -> Result<(), std::io::Error> {
@@ -42,9 +43,13 @@ impl Config {
     pub fn get_spotify_secret(&self) -> &str {
         &self.spotify_secret
     }
-    pub fn set_config(&mut self, spotify_id: String, spotify_secret: String) {
+    pub fn get_soundcloud_oauth_token(&self) -> &str {
+        &self.soundcloud_oauth_token
+    }
+    pub fn set_config(&mut self, spotify_id: String, spotify_secret: String, soundcloud_oauth_token: String) {
         self.spotify_id = spotify_id;
         self.spotify_secret = spotify_secret;
+        self.soundcloud_oauth_token = soundcloud_oauth_token;
     }
     pub fn config_path() -> Option<PathBuf> {
         let os = env::consts::OS;

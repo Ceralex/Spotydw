@@ -1,5 +1,5 @@
 use std::env;
-use std::process::{Command, ExitCode};
+use std::process::{exit, ExitCode};
 use which::which;
 
 mod config;
@@ -14,17 +14,22 @@ mod youtube {
     pub mod api;
     pub mod download;
 }
+mod soundcloud {
+    pub mod api;
+    pub mod download;
+}
+
 use config::Config;
 use parser::parse_url;
 use parser::UrlType::{SoundCloud, Spotify};
 use parser::{SoundCloudType, SpotifyType};
 use spotify::access_token::AccessToken;
-use spotify::download::{download_album, download_playlist, download_track};
 
+// TODO: Find a better method to set config, you should be able to set spotify credentials and soundcloud separated
 fn usage(program: &str) {
     eprintln!("Usage: {program} [SUBCOMMAND] [OPTIONS]");
     eprintln!("Subcommands:");
-    eprintln!("     config <SPOTIFY_CLIENT_ID> <SPOTIFY_CLIENT_SECRET>");
+    eprintln!("     config <SPOTIFY_CLIENT_ID> <SPOTIFY_CLIENT_SECRET> [SOUNDCLOUD_OAUTH_TOKEN]");
     eprintln!("     download <URL>");
 }
 
@@ -52,7 +57,8 @@ fn entry() -> Result<(), ()> {
                 eprintln!("ERROR: Spotify secret is not provided");
             })?;
 
-            config.set_config(id, secret);
+            let oauth_token = args.next().unwrap_or("".to_string());
+            config.set_config(id, secret, oauth_token);
 
             config.save().map_err(|err| {
                 eprintln!("ERROR: failed to save config: {err}");
@@ -81,44 +87,46 @@ fn entry() -> Result<(), ()> {
 
                     match spotify_type {
                         SpotifyType::Track => {
-                            download_track(&access_token, &id, &yt_dlp_path, &ffmpeg_path);
+                            spotify::download::download_track(
+                                &access_token,
+                                &id,
+                                &yt_dlp_path,
+                                &ffmpeg_path,
+                            );
                         }
                         SpotifyType::Album => {
-                            download_album(&access_token, &id, &yt_dlp_path, &ffmpeg_path);
+                            spotify::download::download_album(
+                                &access_token,
+                                &id,
+                                &yt_dlp_path,
+                                &ffmpeg_path,
+                            );
                         }
                         SpotifyType::Playlist => {
-                            download_playlist(&access_token, &id, &yt_dlp_path, &ffmpeg_path);
+                            spotify::download::download_playlist(
+                                &access_token,
+                                &id,
+                                &yt_dlp_path,
+                                &ffmpeg_path,
+                            );
                         }
                     }
                 }
-                SoundCloud(soundcloud_type) => match soundcloud_type {
-                    SoundCloudType::Track => {
-                        let mut command = Command::new(&yt_dlp_path);
+                SoundCloud(soundcloud_type) => {
+                    let oauth_token = config.get_soundcloud_oauth_token();
 
-                        command
-                            .arg("-x")
-                            .arg(&url)
-                            .arg("--audio-format")
-                            .arg("best");
-
-                        command.arg("-o").arg("%(title)s.%(ext)s");
-
-                        command.output().expect("Failed something while download");
+                    if oauth_token.is_empty() {
+                        usage(&program);
+                        eprintln!("ERROR: Soundcloud OAuth token not provided, set the config again");
+                        exit(1);
                     }
-                    SoundCloudType::Set => {
-                        let mut command = Command::new(&yt_dlp_path);
-
-                        command
-                            .arg("-x")
-                            .arg(&url)
-                            .arg("--audio-format")
-                            .arg("best");
-
-                        command.arg("-o").arg(&format!("{}/%(title)s.%(ext)s", id));
-
-                        command.output().expect("Failed something while download");
+                    match soundcloud_type {
+                        SoundCloudType::Track => soundcloud::download::download_track(config.get_soundcloud_oauth_token(), &url, &yt_dlp_path, &ffmpeg_path),
+                        SoundCloudType::Set => {
+                            unimplemented!("Set download not implemented yet!");
+                        }
                     }
-                },
+                }
             }
             Ok(())
         }

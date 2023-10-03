@@ -2,7 +2,7 @@ use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
 use crate::{ffmpeg, spotify, youtube};
-use ffmpeg::Metadata;
+use ffmpeg::SpotifyMetadata;
 use spotify::access_token::AccessToken;
 use spotify::api::{fetch_album, fetch_playlist, fetch_track};
 use youtube::api::search_videos;
@@ -47,7 +47,7 @@ pub fn download_playlist(
             })
             .unwrap();
 
-        let metadata = Metadata {
+        let metadata = SpotifyMetadata {
             title: track.name.clone(),
             artists: track.artists.clone(),
             album_artists: track.album.artists.clone(),
@@ -99,7 +99,7 @@ pub fn download_album(
             })
             .unwrap();
 
-        let metadata = Metadata {
+        let metadata = SpotifyMetadata {
             title: track.name.clone(),
             artists: track.artists.clone(),
             album_artists: album.artists.clone(),
@@ -150,7 +150,7 @@ pub fn download_track(
         })
         .unwrap();
 
-    let metadata = Metadata {
+    let metadata = SpotifyMetadata {
         title: track.name,
         artists: track.artists,
         album_artists: track.album.artists,
