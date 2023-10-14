@@ -117,14 +117,24 @@ fn entry() -> Result<(), ()> {
 
                     if oauth_token.is_empty() {
                         usage(&program);
-                        eprintln!("ERROR: Soundcloud OAuth token not provided, set the config again");
+                        eprintln!(
+                            "ERROR: Soundcloud OAuth token not provided, set the config again"
+                        );
                         exit(1);
                     }
                     match soundcloud_type {
-                        SoundCloudType::Track => soundcloud::download::download_track(config.get_soundcloud_oauth_token(), &url, &yt_dlp_path, &ffmpeg_path),
-                        SoundCloudType::Set => {
-                            unimplemented!("Set download not implemented yet!");
-                        }
+                        SoundCloudType::Track => soundcloud::download::download_track(
+                            config.get_soundcloud_oauth_token(),
+                            &url,
+                            &yt_dlp_path,
+                            &ffmpeg_path,
+                        ),
+                        SoundCloudType::Set => soundcloud::download::download_set(
+                            config.get_soundcloud_oauth_token(),
+                            &url,
+                            &yt_dlp_path,
+                            &ffmpeg_path,
+                        ),
                     }
                 }
             }
