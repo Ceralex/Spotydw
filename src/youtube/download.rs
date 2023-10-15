@@ -11,7 +11,7 @@ pub fn download_video(
 ) -> Result<PathBuf, std::io::Error> {
     let url = format!("https://www.youtube.com/watch?v={}", video.id);
 
-    let mut command = Command::new(&yt_dlp_path);
+    let mut command = Command::new(yt_dlp_path);
 
     command
         .arg("-x")

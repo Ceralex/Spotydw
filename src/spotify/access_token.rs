@@ -44,7 +44,7 @@ impl AccessToken {
                 if token.is_expired() {
                     println!("Token expired, getting a new one...");
 
-                    let token = fetch_token(&config).expect("Failed to get access token");
+                    let token = fetch_token(config).expect("Failed to get access token");
 
                     token.save().expect("Failed to save access token");
                     return Ok(token);
@@ -55,7 +55,7 @@ impl AccessToken {
             Err(_) => {
                 println!("Token file not found, requesting a new one...");
 
-                let token = fetch_token(&config).expect("Failed to get access token");
+                let token = fetch_token(config).expect("Failed to get access token");
 
                 token.save().expect("Failed to save access token");
 
@@ -84,7 +84,7 @@ fn fetch_token(config: &Config) -> Result<AccessToken, ureq::Error> {
     let spotify_secret = config.get_spotify_secret();
 
     let auth_header = format!("{}:{}", spotify_id, spotify_secret);
-    let encoded_auth_header = general_purpose::STANDARD_NO_PAD.encode(&auth_header);
+    let encoded_auth_header = general_purpose::STANDARD_NO_PAD.encode(auth_header);
 
     let auth_options = [("grant_type", "client_credentials")];
 

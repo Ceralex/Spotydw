@@ -10,11 +10,11 @@ use youtube::download::download_video;
 
 pub fn download_playlist(
     access_token: &AccessToken,
-    id: &String,
-    yt_dlp_path: &PathBuf,
+    id: &str,
+    yt_dlp_path: &Path,
     ffmpeg_path: &PathBuf,
 ) {
-    let playlist = fetch_playlist(access_token.get_token(), &id);
+    let playlist = fetch_playlist(access_token.get_token(), id);
 
     println!("Downloading playlist: {}", playlist.name);
 
@@ -41,7 +41,7 @@ pub fn download_playlist(
             .min_by_key(|&video| video.duration_ms.wrapping_sub(track.duration_ms))
             .unwrap();
 
-        let input_file = download_video(&yt_dlp_path, &video, Some(Path::new(&playlist.name)))
+        let input_file = download_video(yt_dlp_path, video, Some(Path::new(&playlist.name)))
             .map_err(|err| {
                 eprintln!("ERROR: failed to download video: {err}");
             })
@@ -58,17 +58,17 @@ pub fn download_playlist(
             album_cover_url: track.album.images[0].url.clone(),
         };
 
-        ffmpeg::metadata_and_to_mp3(&ffmpeg_path, &input_file, &metadata);
+        ffmpeg::metadata_and_to_mp3(ffmpeg_path, &input_file, &metadata);
     });
 }
 
 pub fn download_album(
     access_token: &AccessToken,
-    id: &String,
-    yt_dlp_path: &PathBuf,
+    id: &str,
+    yt_dlp_path: &Path,
     ffmpeg_path: &PathBuf,
 ) {
-    let album = fetch_album(access_token.get_token(), &id);
+    let album = fetch_album(access_token.get_token(), id);
 
     println!("Downloading album: {}", album.name);
 
@@ -93,7 +93,7 @@ pub fn download_album(
             .min_by_key(|&video| video.duration_ms.wrapping_sub(track.duration_ms))
             .unwrap();
 
-        let input_file = download_video(&yt_dlp_path, &video, Some(Path::new(&album.name)))
+        let input_file = download_video(yt_dlp_path, video, Some(Path::new(&album.name)))
             .map_err(|err| {
                 eprintln!("ERROR: failed to download video: {err}");
             })
@@ -110,17 +110,17 @@ pub fn download_album(
             album_cover_url: album.images[0].url.clone(),
         };
 
-        ffmpeg::metadata_and_to_mp3(&ffmpeg_path, &input_file, &metadata);
+        ffmpeg::metadata_and_to_mp3(ffmpeg_path, &input_file, &metadata);
     });
 }
 
 pub fn download_track(
     access_token: &AccessToken,
-    id: &String,
-    yt_dlp_path: &PathBuf,
+    id: &str,
+    yt_dlp_path: &Path,
     ffmpeg_path: &PathBuf,
 ) {
-    let track = fetch_track(access_token.get_token(), &id);
+    let track = fetch_track(access_token.get_token(), id);
 
     println!("Downloading track: {}", track.name);
 
@@ -144,7 +144,7 @@ pub fn download_track(
         .min_by_key(|&video| video.duration_ms.wrapping_sub(track.duration_ms))
         .unwrap();
 
-    let input_file = download_video(&yt_dlp_path, &video, None)
+    let input_file = download_video(yt_dlp_path, video, None)
         .map_err(|err| {
             eprintln!("ERROR: failed to download video: {err}");
         })
@@ -161,5 +161,5 @@ pub fn download_track(
         album_cover_url: track.album.images[0].url.clone(),
     };
 
-    ffmpeg::metadata_and_to_mp3(&ffmpeg_path, &input_file, &metadata);
+    ffmpeg::metadata_and_to_mp3(ffmpeg_path, &input_file, &metadata);
 }

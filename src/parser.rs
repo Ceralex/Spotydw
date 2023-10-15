@@ -45,7 +45,7 @@ pub fn parse_url(url: &str) -> (UrlType, String) {
             }
         };
 
-        return (url_type, id.to_string());
+        (url_type, id.to_string())
     } else if host == "soundcloud.com" {
         let path = parsed.path();
         let mut parts = path.split('/');

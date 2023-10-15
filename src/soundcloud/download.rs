@@ -16,29 +16,29 @@ pub fn download_track(
 
     println!("Downloading track: {}", track.title);
 
-    let mut command = Command::new(&yt_dlp_path);
+    let mut command = Command::new(yt_dlp_path);
 
     command
         .arg("-x")
-        .arg(&url)
+        .arg(url)
         .arg("--audio-format")
         .arg("best");
 
-    command.arg("-o").arg(&format!("%(id)s.%(ext)s"));
+    command.arg("-o").arg("%(id)s.%(ext)s");
 
     command.output().expect("Failed something while download");
 
-    let mut command = Command::new(&ffmpeg_path);
+    let mut command = Command::new(ffmpeg_path);
 
     let input_file_path = format!("{}.mp3", &track.id);
     let output_file_path = format!(
         "{}.mp3",
         track
             .title
-            .replace(&['<', '>', ':', '"', '/', '\\', '|', '?', '*'], " ")
+            .replace(['<', '>', ':', '"', '/', '\\', '|', '?', '*'], " ")
     );
 
-    command.args(&[
+    command.args([
         "-i",
         &input_file_path,
         "-f",
@@ -54,7 +54,7 @@ pub fn download_track(
         "-metadata",
         &format!("album={}", track.title),
         "-metadata",
-        &format!("track=1/1"),
+        "track=1/1",
         "-metadata",
         &format!("date={}", track.display_date),
         "-c",
@@ -95,7 +95,7 @@ pub fn download_set(oauth_token: &str, url: &String, yt_dlp_path: &PathBuf, ffmp
     set.tracks.par_iter().enumerate().for_each(|(index, track)| {
         let track = fetch_set_track(oauth_token, track.id);
 
-        let mut command = Command::new(&yt_dlp_path);
+        let mut command = Command::new(yt_dlp_path);
 
         command
             .arg("-x")
@@ -109,7 +109,7 @@ pub fn download_set(oauth_token: &str, url: &String, yt_dlp_path: &PathBuf, ffmp
 
         command.output().expect("Failed something while download");
 
-        let mut command = Command::new(&ffmpeg_path);
+        let mut command = Command::new(ffmpeg_path);
 
         let input_file_path = format!("{}/{}.mp3", &set.title, &track.id);
         let output_file_path = format!(
@@ -117,10 +117,10 @@ pub fn download_set(oauth_token: &str, url: &String, yt_dlp_path: &PathBuf, ffmp
             &set.title,
             track
                 .title
-                .replace(&['<', '>', ':', '"', '/', '\\', '|', '?', '*'], " ")
+                .replace(['<', '>', ':', '"', '/', '\\', '|', '?', '*'], " ")
         );
 
-        command.args(&[
+        command.args([
             "-i",
             &input_file_path,
             "-f",

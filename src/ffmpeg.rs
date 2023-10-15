@@ -18,7 +18,7 @@ pub fn metadata_and_to_mp3(
     input_file: &PathBuf,
     metadata: &SpotifyMetadata,
 ) {
-    let mut command = Command::new(&ffmpeg_path);
+    let mut command = Command::new(ffmpeg_path);
 
     let artists = metadata
         .artists
@@ -42,12 +42,12 @@ pub fn metadata_and_to_mp3(
         "{}.mp3",
         metadata
             .title
-            .replace(&['<', '>', ':', '"', '/', '\\', '|', '?', '*'], " ")
+            .replace(['<', '>', ':', '"', '/', '\\', '|', '?', '*'], " ")
     ));
 
-    command.args(&[
+    command.args([
         "-i",
-        &input_file.to_str().unwrap(),
+        (input_file.to_str().unwrap()),
         "-i",
         &metadata.album_cover_url,
         "-metadata",
@@ -81,7 +81,7 @@ pub fn metadata_and_to_mp3(
         "-metadata:s:v",
         "comment='Cover (front)'",
         "-y",
-        &output_file_path.to_str().unwrap(),
+        (output_file_path.to_str().unwrap()),
     ]);
     let output = command.output().expect("Failed to execute ffmpeg");
 
@@ -95,7 +95,7 @@ pub fn metadata_and_to_mp3(
         return;
     }
 
-    fs::remove_file(&input_file).expect("Failed to remove input file");
+    fs::remove_file(input_file).expect("Failed to remove input file");
 
     println!("{} downloaded", metadata.title);
 }
