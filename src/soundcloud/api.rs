@@ -13,7 +13,7 @@ pub struct Track {
 pub struct User {
     pub username: String,
 }
-pub fn fetch_track(oauth_token: &str, url: &String) -> Track {
+pub fn fetch_track(oauth_token: &str, url: &str) -> Track {
     let url = format!("https://api-v2.soundcloud.com/resolve?url={}", url);
 
     let response = ureq::get(&url)
@@ -38,7 +38,7 @@ pub struct Set {
 pub struct SetTrack {
     pub id: u64,
 }
-pub fn fetch_set(oauth_token: &str, url: &String) -> Set {
+pub fn fetch_set(oauth_token: &str, url: &str) -> Set {
     let url = format!("https://api-v2.soundcloud.com/resolve?url={}", url);
 
     let response = ureq::get(&url)

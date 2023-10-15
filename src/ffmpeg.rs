@@ -1,6 +1,6 @@
 use crate::spotify::api::Artist;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 pub struct SpotifyMetadata {
@@ -13,11 +13,7 @@ pub struct SpotifyMetadata {
     pub release_date: String,
     pub album_cover_url: String,
 }
-pub fn metadata_and_to_mp3(
-    ffmpeg_path: &PathBuf,
-    input_file: &PathBuf,
-    metadata: &SpotifyMetadata,
-) {
+pub fn metadata_and_to_mp3(ffmpeg_path: &Path, input_file: &Path, metadata: &SpotifyMetadata) {
     let mut command = Command::new(ffmpeg_path);
 
     let artists = metadata

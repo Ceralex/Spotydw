@@ -1,5 +1,5 @@
 use rayon::prelude::*;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::{ffmpeg, spotify, youtube};
 use ffmpeg::SpotifyMetadata;
@@ -12,7 +12,7 @@ pub fn download_playlist(
     access_token: &AccessToken,
     id: &str,
     yt_dlp_path: &Path,
-    ffmpeg_path: &PathBuf,
+    ffmpeg_path: &Path,
 ) {
     let playlist = fetch_playlist(access_token.get_token(), id);
 
@@ -66,7 +66,7 @@ pub fn download_album(
     access_token: &AccessToken,
     id: &str,
     yt_dlp_path: &Path,
-    ffmpeg_path: &PathBuf,
+    ffmpeg_path: &Path,
 ) {
     let album = fetch_album(access_token.get_token(), id);
 
@@ -118,7 +118,7 @@ pub fn download_track(
     access_token: &AccessToken,
     id: &str,
     yt_dlp_path: &Path,
-    ffmpeg_path: &PathBuf,
+    ffmpeg_path: &Path,
 ) {
     let track = fetch_track(access_token.get_token(), id);
 
