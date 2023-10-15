@@ -92,7 +92,7 @@ pub fn download_set(oauth_token: &str, url: &String, yt_dlp_path: &PathBuf, ffmp
 
     println!("Downloading set: {}", set.title);
 
-    set.tracks.par_iter().for_each(|track| {
+    set.tracks.par_iter().enumerate().for_each(|(index, track)| {
         let track = fetch_set_track(oauth_token, track.id);
 
         let mut command = Command::new(&yt_dlp_path);
@@ -136,7 +136,7 @@ pub fn download_set(oauth_token: &str, url: &String, yt_dlp_path: &PathBuf, ffmp
             "-metadata",
             &format!("album={}", set.title),
             "-metadata",
-            &format!("track=1/1"),
+            &format!("track={}/{}", index + 1, set.tracks.len()),
             "-metadata",
             &format!("date={}", track.display_date),
             "-c",
