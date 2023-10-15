@@ -5,7 +5,7 @@ const DEFAULT_INNERTUBE_KEY: &str = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8";
 pub struct VideoInfo {
     pub id: String,
     pub title: String,
-    pub duration_ms: u64,
+    pub duration_ms: usize,
 }
 pub fn search_videos(query: &str) -> Vec<VideoInfo> {
     let body = format!(
@@ -61,21 +61,21 @@ pub fn search_videos(query: &str) -> Vec<VideoInfo> {
     videos
 }
 
-fn parse_duration_string(duration_str: &str) -> Result<u64, &'static str> {
+fn parse_duration_string(duration_str: &str) -> Result<usize, &'static str> {
     let parts: Vec<&str> = duration_str.split(':').collect();
 
     match parts.len() {
         2 => {
             // Format: "minutes:seconds"
-            let minutes: u64 = parts[0].parse().unwrap_or(0);
-            let seconds: u64 = parts[1].parse().unwrap_or(0);
+            let minutes: usize = parts[0].parse().unwrap_or(0);
+            let seconds: usize = parts[1].parse().unwrap_or(0);
             Ok(minutes * 60_000 + seconds * 1_000)
         }
         3 => {
             // Format: "hours:minutes:seconds"
-            let hours: u64 = parts[0].parse().unwrap_or(0);
-            let minutes: u64 = parts[1].parse().unwrap_or(0);
-            let seconds: u64 = parts[2].parse().unwrap_or(0);
+            let hours: usize = parts[0].parse().unwrap_or(0);
+            let minutes: usize = parts[1].parse().unwrap_or(0);
+            let seconds: usize = parts[2].parse().unwrap_or(0);
             Ok(hours * 3_600_000 + minutes * 60_000 + seconds * 1_000)
         }
         _ => Err("Invalid duration format"),

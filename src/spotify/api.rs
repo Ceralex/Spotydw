@@ -5,8 +5,8 @@ pub struct Track {
     pub name: String,
     pub artists: Vec<Artist>,
     pub album: Album,
-    pub track_number: u64,
-    pub duration_ms: u64,
+    pub track_number: usize,
+    pub duration_ms: usize,
 }
 #[derive(Debug, Deserialize, Clone)]
 pub struct Artist {
@@ -16,7 +16,7 @@ pub struct Artist {
 pub struct Album {
     pub name: String,
     pub release_date: String,
-    pub total_tracks: u64,
+    pub total_tracks: usize,
     pub artists: Vec<Artist>,
     pub images: Vec<Image>,
 }
@@ -123,14 +123,14 @@ pub struct AlbumResponse {
 #[derive(Debug, Deserialize)]
 pub struct AlbumItems {
     pub items: Vec<AlbumTrack>,
-    pub total: u64,
+    pub total: usize,
 }
 #[derive(Debug, Deserialize)]
 pub struct AlbumTrack {
     pub name: String,
     pub artists: Vec<Artist>,
-    pub track_number: u64,
-    pub duration_ms: u64,
+    pub track_number: usize,
+    pub duration_ms: usize,
 }
 pub fn fetch_album(token: &str, id: &str) -> AlbumResponse {
     let url = format!("https://api.spotify.com/v1/albums/{id}");

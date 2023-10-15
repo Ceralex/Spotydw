@@ -2,7 +2,7 @@ use rayon::prelude::*;
 use std::path::Path;
 
 use crate::{ffmpeg, spotify, youtube};
-use ffmpeg::SpotifyMetadata;
+use ffmpeg::Metadata;
 use spotify::access_token::AccessToken;
 use spotify::api::{fetch_album, fetch_playlist, fetch_track};
 use youtube::api::search_videos;
@@ -41,16 +41,25 @@ pub fn download_playlist(
             .min_by_key(|&video| video.duration_ms.wrapping_sub(track.duration_ms))
             .unwrap();
 
-        let input_file = download_video(yt_dlp_path, video, Some(Path::new(&playlist.name)))
+        let input_file_path = download_video(yt_dlp_path, video, Some(Path::new(&playlist.name)))
             .map_err(|err| {
                 eprintln!("ERROR: failed to download video: {err}");
             })
             .unwrap();
 
-        let metadata = SpotifyMetadata {
+        let metadata = Metadata {
             title: track.name.clone(),
-            artists: track.artists.clone(),
-            album_artists: track.album.artists.clone(),
+            artists: track
+                .artists
+                .iter()
+                .map(|artist| artist.name.clone())
+                .collect(),
+            album_artists: track
+                .album
+                .artists
+                .iter()
+                .map(|artist| artist.name.clone())
+                .collect(),
             album_name: track.album.name.clone(),
             total_tracks: track.album.total_tracks,
             track_number: track.track_number,
@@ -58,7 +67,18 @@ pub fn download_playlist(
             album_cover_url: track.album.images[0].url.clone(),
         };
 
-        ffmpeg::metadata_and_to_mp3(ffmpeg_path, &input_file, &metadata);
+        let output_file = format!(
+            "{}/{}.mp3",
+            playlist
+                .name
+                .replace(['<', '>', ':', '"', '/', '\\', '|', '?', '*'], " "),
+            track
+                .name
+                .replace(['<', '>', ':', '"', '/', '\\', '|', '?', '*'], " ")
+        );
+        let output_file_path = Path::new(&output_file);
+
+        ffmpeg::process_with_metadata(ffmpeg_path, &input_file_path, output_file_path, &metadata);
     });
 }
 
@@ -93,16 +113,24 @@ pub fn download_album(
             .min_by_key(|&video| video.duration_ms.wrapping_sub(track.duration_ms))
             .unwrap();
 
-        let input_file = download_video(yt_dlp_path, video, Some(Path::new(&album.name)))
+        let input_file_path = download_video(yt_dlp_path, video, Some(Path::new(&album.name)))
             .map_err(|err| {
                 eprintln!("ERROR: failed to download video: {err}");
             })
             .unwrap();
 
-        let metadata = SpotifyMetadata {
+        let metadata = Metadata {
             title: track.name.clone(),
-            artists: track.artists.clone(),
-            album_artists: album.artists.clone(),
+            artists: track
+                .artists
+                .iter()
+                .map(|artist| artist.name.clone())
+                .collect(),
+            album_artists: album
+                .artists
+                .iter()
+                .map(|artist| artist.name.clone())
+                .collect(),
             album_name: album.name.clone(),
             total_tracks: album.tracks.total,
             track_number: track.track_number,
@@ -110,7 +138,18 @@ pub fn download_album(
             album_cover_url: album.images[0].url.clone(),
         };
 
-        ffmpeg::metadata_and_to_mp3(ffmpeg_path, &input_file, &metadata);
+        let output_file = format!(
+            "{}/{}.mp3",
+            album
+                .name
+                .replace(['<', '>', ':', '"', '/', '\\', '|', '?', '*'], " "),
+            track
+                .name
+                .replace(['<', '>', ':', '"', '/', '\\', '|', '?', '*'], " ")
+        );
+        let output_file_path = Path::new(&output_file);
+
+        ffmpeg::process_with_metadata(ffmpeg_path, &input_file_path, output_file_path, &metadata);
     });
 }
 
@@ -144,16 +183,25 @@ pub fn download_track(
         .min_by_key(|&video| video.duration_ms.wrapping_sub(track.duration_ms))
         .unwrap();
 
-    let input_file = download_video(yt_dlp_path, video, None)
+    let input_file_path = download_video(yt_dlp_path, video, None)
         .map_err(|err| {
             eprintln!("ERROR: failed to download video: {err}");
         })
         .unwrap();
 
-    let metadata = SpotifyMetadata {
-        title: track.name,
-        artists: track.artists,
-        album_artists: track.album.artists,
+    let metadata = Metadata {
+        title: track.name.clone(),
+        artists: track
+            .artists
+            .iter()
+            .map(|artist| artist.name.clone())
+            .collect(),
+        album_artists: track
+            .album
+            .artists
+            .iter()
+            .map(|artist| artist.name.clone())
+            .collect(),
         album_name: track.album.name,
         total_tracks: track.album.total_tracks,
         track_number: track.track_number,
@@ -161,5 +209,13 @@ pub fn download_track(
         album_cover_url: track.album.images[0].url.clone(),
     };
 
-    ffmpeg::metadata_and_to_mp3(ffmpeg_path, &input_file, &metadata);
+    let output_file = format!(
+        "{}.mp3",
+        track
+            .name
+            .replace(['<', '>', ':', '"', '/', '\\', '|', '?', '*'], " ")
+    );
+    let output_file_path = Path::new(&output_file);
+
+    ffmpeg::process_with_metadata(ffmpeg_path, &input_file_path, output_file_path, &metadata);
 }

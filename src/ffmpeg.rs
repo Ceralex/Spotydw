@@ -1,49 +1,34 @@
-use crate::spotify::api::Artist;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 
-pub struct SpotifyMetadata {
+pub struct Metadata {
     pub title: String,
-    pub artists: Vec<Artist>,
-    pub album_artists: Vec<Artist>,
+    pub artists: Vec<String>,
+    pub album_artists: Vec<String>,
     pub album_name: String,
-    pub total_tracks: u64,
-    pub track_number: u64,
+    pub total_tracks: usize,
+    pub track_number: usize,
     pub release_date: String,
     pub album_cover_url: String,
 }
-pub fn metadata_and_to_mp3(ffmpeg_path: &Path, input_file: &Path, metadata: &SpotifyMetadata) {
+
+pub fn process_with_metadata(
+    ffmpeg_path: &Path,
+    input_file: &Path,
+    output_file: &Path,
+    metadata: &Metadata,
+) {
     let mut command = Command::new(ffmpeg_path);
 
-    let artists = metadata
-        .artists
-        .iter()
-        .map(|artist| artist.name.clone())
-        .collect::<Vec<String>>()
-        .join("; ");
-    let album_artists = metadata
-        .album_artists
-        .iter()
-        .map(|artist| artist.name.clone())
-        .collect::<Vec<String>>()
-        .join("; ");
-
-    let mut output_file_path = PathBuf::new();
-    if let Some(parent) = input_file.parent() {
-        output_file_path.push(parent);
-    }
-
-    output_file_path.push(format!(
-        "{}.mp3",
-        metadata
-            .title
-            .replace(['<', '>', ':', '"', '/', '\\', '|', '?', '*'], " ")
-    ));
+    let artists = metadata.artists.join("; ");
+    let album_artists = metadata.album_artists.join("; ");
 
     command.args([
         "-i",
-        (input_file.to_str().unwrap()),
+        input_file.to_str().unwrap(),
+        "-f",
+        "jpeg_pipe",
         "-i",
         &metadata.album_cover_url,
         "-metadata",
@@ -70,15 +55,14 @@ pub fn metadata_and_to_mp3(ffmpeg_path: &Path, input_file: &Path, metadata: &Spo
         "libmp3lame",
         "-q:a",
         "4",
-        "-id3v2_version",
-        "3",
         "-metadata:s:v",
         "title='Album cover'",
         "-metadata:s:v",
         "comment='Cover (front)'",
         "-y",
-        (output_file_path.to_str().unwrap()),
+        output_file.to_str().unwrap(),
     ]);
+
     let output = command.output().expect("Failed to execute ffmpeg");
 
     if !output.status.success() {
@@ -87,11 +71,8 @@ pub fn metadata_and_to_mp3(ffmpeg_path: &Path, input_file: &Path, metadata: &Spo
             output.status.code().unwrap_or(1)
         );
         eprintln!("ffmpeg output: {}", String::from_utf8_lossy(&output.stderr));
-
-        return;
     }
 
-    fs::remove_file(input_file).expect("Failed to remove input file");
-
     println!("{} downloaded", metadata.title);
+    fs::remove_file(input_file).unwrap();
 }
