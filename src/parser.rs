@@ -64,3 +64,15 @@ pub fn parse_url(url: &str) -> (UrlType, String) {
         std::process::exit(1);
     }
 }
+
+pub fn extract_filename(output: &str) -> Option<&str> {
+    // Find the line containing "Destination:"
+    if let Some(destination_line) = output.lines().find(|line| line.contains("Destination:")) {
+        // Extract the part after "Destination:"
+        let parts: Vec<&str> = destination_line.splitn(2, "Destination: ").collect();
+        if parts.len() == 2 {
+            return Some(parts[1]);
+        }
+    }
+    None
+}
